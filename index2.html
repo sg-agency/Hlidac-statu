@@ -133,7 +133,33 @@
     .nav-link-item:hover { opacity: .75; color: var(--hs-blue); }
     .nav-link-pv { color: var(--hs-black); display: flex; align-items: center; gap: 2px; }
     .nav-link-pv:hover { color: var(--hs-black); opacity: .75; }
-    .nav-actions { display: flex; align-items: center; gap: 16px; margin-left: auto; }
+    .nav-actions { display: flex; align-items: center; gap: 16px; }
+    .nav-search-toggle {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; background: none; border: none;
+      color: var(--hs-blue); cursor: pointer; flex-shrink: 0;
+      transition: opacity .35s ease;
+    }
+    .nav-search-toggle:hover { opacity: .75; }
+    .nav-right { display: flex; align-items: center; gap: 24px; margin-left: auto; }
+
+    /* Navbar search mode — nav inner fills with search */
+    .nav-search-box {
+      display: none; flex: 1; align-items: center; gap: 16px;
+    }
+    .nav-search-box .hs-search { height: 50px; flex: 1; }
+    .nav-search-close {
+      background: none; border: none; color: var(--hs-black);
+      font-size: 24px; cursor: pointer; line-height: 1; opacity: .5;
+      flex-shrink: 0; padding: 0 8px;
+      transition: opacity .35s ease;
+    }
+    .nav-search-close:hover { opacity: 1; }
+
+    .hs-navbar.search-active .nav-links,
+    .hs-navbar.search-active .nav-right,
+    .hs-navbar.search-active .nav-toggle { display: none !important; }
+    .hs-navbar.search-active .nav-search-box { display: flex; }
 
     /* ─── HERO ───────────────────────────────────────────────── */
     .hs-hero { background: #fff; padding: 120px 0; }
@@ -157,16 +183,14 @@
     }
     .hs-search input::placeholder { color: var(--hs-grey); }
     .hs-search .s-btn {
-      display: inline-flex; align-items: center; justify-content: center;
       background: var(--hs-blue); color: #fff;
       border: none; border-radius: 0 4px 4px 0;
       padding: 0 32px; font-weight: 700; font-size: 14px;
       letter-spacing: 1px; text-transform: uppercase;
       cursor: pointer; font-family: inherit; white-space: nowrap;
-      text-decoration: none;
       transition: background .35s ease;
     }
-    .hs-search .s-btn:hover { background: #005cbb; color: #fff; }
+    .hs-search .s-btn:hover { background: #005cbb; }
 
     .hs-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 
@@ -305,6 +329,7 @@
     }
     @media (max-width: 991.98px) {
       .hs-navbar .nav-links { display: none; }
+      .hs-navbar .nav-actions { display: none; }
       .nav-toggle { display: flex !important; }
       .impact-row-2 { grid-template-columns: 1fr; }
       .impact-row-3 { grid-template-columns: 1fr; }
@@ -374,14 +399,37 @@
       </a>
     </nav>
 
-    <div class="nav-actions">
-      <a href="#podporte" class="btn-hs btn-hs-solid">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M10 17s-7-4.35-7-9a4 4 0 0 1 7-2.65A4 4 0 0 1 17 8c0 4.65-7 9-7 9z" fill="white"/>
+    <div class="nav-right">
+      <button type="button" class="nav-search-toggle" aria-label="Otevřít vyhledávání" onclick="document.querySelector('.hs-navbar').classList.add('search-active'); setTimeout(()=>document.querySelector('.nav-search-box input').focus(), 50);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+          <path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        Podpořte nás
-      </a>
-      <a href="#" class="btn-hs btn-hs-outline">Přihlásit se</a>
+      </button>
+      <div class="nav-actions">
+        <a href="#podporte" class="btn-hs btn-hs-solid">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 17s-7-4.35-7-9a4 4 0 0 1 7-2.65A4 4 0 0 1 17 8c0 4.65-7 9-7 9z" fill="white"/>
+          </svg>
+          Podpořte nás
+        </a>
+        <a href="#" class="btn-hs btn-hs-outline">Přihlásit se</a>
+      </div>
+    </div>
+
+    <!-- Nav search mode — vše kromě loga je skryto -->
+    <div class="nav-search-box">
+      <div class="hs-search">
+        <div class="s-input-wrap">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="9" cy="9" r="6" stroke="#6F6F6F" stroke-width="2"/>
+            <path d="M13.5 13.5L17 17" stroke="#6F6F6F" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input type="search" placeholder="Hledejte úřad, firmu nebo politika…" aria-label="Hledat">
+        </div>
+        <button class="s-btn" type="button">Hledat</button>
+      </div>
+      <button type="button" class="nav-search-close" aria-label="Zavřít vyhledávání" onclick="document.querySelector('.hs-navbar').classList.remove('search-active');">✕</button>
     </div>
 
     <!-- Mobile toggle -->
@@ -439,7 +487,7 @@
             </svg>
             <input type="search" placeholder="Hledejte úřad, firmu nebo politika…" aria-label="Hledat">
           </div>
-          <a href="analyza.html" class="s-btn">Hledat</a>
+          <button class="s-btn">Hledat</button>
         </div>
         <div class="hs-tags">
           <a href="#" class="hs-tag">Agrofert</a>

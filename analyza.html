@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detail analýzy — Hlídač státu</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* ─── DESIGN TOKENS ──────────────────────────────────────── */
+    :root {
+      --hs-blue:       #0074E4;
+      --hs-blue-light: #369CFF;
+      --hs-black:      #28313B;
+      --hs-grey:       #6F6F6F;
+      --hs-light:      #F0F3F7;
+      --hs-orange:     #FFA82F;
+      --hs-dark-blue:  #003688;
+      --hs-muted:      #E0E6ED;
+      --hs-red:        #FF525B;
+      --hs-green:      #38CAAA;
+    }
+
+    body {
+      font-family: 'Cabin', system-ui, sans-serif;
+      color: var(--hs-black);
+      background: #fff;
+      padding-bottom: 84px;
+    }
+    a { text-decoration: none; }
+
+    .hs-wrap {
+      width: 100%;
+      max-width: 1440px;
+      padding-inline: clamp(1rem, 14.44vw, 208px);
+      margin-inline: auto;
+    }
+
+    /* ─── TYPE SCALE ─────────────────────────────────────────── */
+    .hs-eyebrow { font-size: 18px; font-weight: 700; line-height: 1.2; letter-spacing: .6px; color: var(--hs-blue); }
+    .hs-h1      { font-size: clamp(2rem, 4.44vw, 64px); font-weight: 700; line-height: 1; letter-spacing: .6px; }
+    .hs-h2      { font-size: clamp(1.5rem, 3.33vw, 48px); font-weight: 700; line-height: 1; letter-spacing: .6px; }
+    .hs-h3      { font-size: clamp(1.1rem, 1.67vw, 24px); font-weight: 700; line-height: 1.2; letter-spacing: .6px; }
+    .hs-body    { font-size: 16px; font-weight: 400; line-height: 1.4; letter-spacing: .5px; }
+    .text-hs-black { color: var(--hs-black); }
+    .hs-sm      { font-size: 14px; font-weight: 400; line-height: 1.5; letter-spacing: .5px; }
+
+    /* ─── BUTTONS ────────────────────────────────────────────── */
+    .btn-hs {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 32px; border-radius: 4px;
+      font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase;
+      white-space: nowrap; cursor: pointer; border: none; line-height: 1.286;
+      font-family: inherit;
+      transition: background .35s ease, color .35s ease, border-color .35s ease, opacity .35s ease;
+    }
+    .btn-hs-solid  { background: var(--hs-blue); color: #fff; }
+    .btn-hs-solid:hover  { background: #005cbb; color: #fff; }
+    .btn-hs-outline { background: transparent; color: var(--hs-blue); border: 2px solid var(--hs-light); }
+    .btn-hs-outline:hover { border-color: var(--hs-blue); color: var(--hs-blue); }
+    .btn-hs-white  { background: #fff; color: var(--hs-black); }
+    .btn-hs-white:hover { background: var(--hs-light); color: var(--hs-black); }
+
+    /* ─── TAGS ───────────────────────────────────────────────── */
+    .hs-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #fff; color: var(--hs-blue);
+      padding: 4px 12px; border-radius: 4px;
+      font-size: 14px; letter-spacing: .5px;
+      border: 1px solid var(--hs-muted);
+      transition: background .35s ease, color .35s ease, border-color .35s ease;
+    }
+    .hs-tag:hover { background: var(--hs-light); border-color: var(--hs-blue); }
+
+    /* ─── ORANGE BAR ─────────────────────────────────────────── */
+    #orange-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      width: 100%; z-index: 1050;
+      background: var(--hs-orange);
+      padding: 16px 40px;
+      display: flex; align-items: center; gap: 32px;
+    }
+    #orange-bar .bar-text {
+      flex: 1; color: var(--hs-black);
+      font-weight: 700; font-size: 18px; letter-spacing: .6px;
+    }
+    #orange-bar .bar-close {
+      background: none; border: none;
+      color: var(--hs-black); font-size: 18px;
+      cursor: pointer; flex-shrink: 0; opacity: .5; line-height: 1;
+    }
+    #orange-bar .bar-close:hover { opacity: 1; }
+
+    /* ─── NAVBAR ─────────────────────────────────────────────── */
+    .hs-navbar {
+      position: sticky; top: 0; z-index: 1020;
+      width: 100%;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,.12);
+    }
+    .hs-navbar .nav-inner {
+      display: flex; align-items: center;
+      gap: 64px; padding: 16px 40px;
+    }
+    .hs-navbar .nav-logo { height: 40px; flex-shrink: 0; }
+    .hs-navbar .nav-links {
+      display: flex; align-items: center; gap: 24px; flex: 1;
+    }
+    .nav-link-item {
+      color: var(--hs-blue); font-weight: 700;
+      font-size: 16px; letter-spacing: .5px; white-space: nowrap;
+    }
+    .nav-link-item:hover { opacity: .75; color: var(--hs-blue); }
+    .nav-link-pv { color: var(--hs-black); display: flex; align-items: center; gap: 2px; }
+    .nav-link-pv:hover { color: var(--hs-black); opacity: .75; }
+    .nav-actions { display: flex; align-items: center; gap: 16px; }
+    .nav-right { display: flex; align-items: center; gap: 24px; margin-left: auto; }
+
+    /* ─── SUB-NAV SEARCH (always open) ───────────────────────── */
+    .hs-subnav-search {
+      background: var(--hs-light);
+      border-bottom: 1px solid var(--hs-muted);
+      padding: 32px 0;
+    }
+    .subnav-search-inner {
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .subnav-search-label {
+      font-size: 14px; font-weight: 700; color: var(--hs-grey);
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+
+    /* Shared search styles (from homepage) */
+    .hs-search { display: flex; height: 56px; width: 100%; }
+    .hs-search .s-input-wrap {
+      flex: 1; display: flex; align-items: center; gap: 12px;
+      border: 2px solid var(--hs-blue); border-right: none;
+      border-radius: 4px 0 0 4px; padding: 0 24px;
+      background: #fff;
+    }
+    .hs-search input {
+      flex: 1; border: none; outline: none; font-family: inherit;
+      font-size: 16px; color: var(--hs-black); background: transparent;
+    }
+    .hs-search input::placeholder { color: var(--hs-grey); }
+    .hs-search .s-btn {
+      background: var(--hs-blue); color: #fff;
+      border: none; border-radius: 0 4px 4px 0;
+      padding: 0 32px; font-weight: 700; font-size: 14px;
+      letter-spacing: 1px; text-transform: uppercase;
+      cursor: pointer; font-family: inherit; white-space: nowrap;
+      transition: background .35s ease;
+    }
+    .hs-search .s-btn:hover { background: #005cbb; }
+
+    .hs-tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .hs-tags-label {
+      font-size: 14px; color: var(--hs-grey); letter-spacing: .5px;
+      margin-right: 4px;
+    }
+
+    /* ─── CONTENT ────────────────────────────────────────────── */
+    .hs-detail { padding: 64px 0 96px; }
+    .breadcrumb-hs {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; color: var(--hs-grey); letter-spacing: .5px;
+      margin-bottom: 24px;
+    }
+    .breadcrumb-hs a { color: var(--hs-blue); }
+    .breadcrumb-hs a:hover { text-decoration: underline; }
+    .breadcrumb-sep { color: var(--hs-muted); }
+
+    .detail-meta {
+      display: flex; flex-wrap: wrap; gap: 16px 32px;
+      margin-top: 24px; padding-top: 24px;
+      border-top: 1px solid var(--hs-muted);
+      color: var(--hs-grey); font-size: 14px; letter-spacing: .5px;
+    }
+    .detail-meta strong { color: var(--hs-black); }
+
+    .risk-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--hs-red); color: #fff;
+      padding: 6px 12px; border-radius: 4px;
+      font-size: 12px; font-weight: 700; letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────── */
+    @media (max-width: 1199.98px) {
+      .hs-navbar .nav-inner { gap: 32px; }
+    }
+    @media (max-width: 991.98px) {
+      .hs-navbar .nav-links { display: none; }
+      .hs-navbar .nav-actions { display: none; }
+      .nav-toggle { display: flex !important; }
+    }
+    @media (max-width: 767.98px) {
+      #orange-bar { padding: 12px 16px; gap: 12px; flex-wrap: wrap; }
+      .hs-subnav-search { padding: 20px 0; }
+    }
+    @media (max-width: 575.98px) {
+      .hs-navbar .nav-inner { padding: 12px 16px; gap: 12px; }
+      .hs-wrap { padding-inline: 1rem; }
+      body { padding-bottom: 120px; }
+      .hs-search { height: 50px; }
+      .hs-search .s-btn { padding: 0 20px; }
+    }
+    .nav-toggle { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- ORANGE BAR -->
+<div id="orange-bar">
+  <div class="bar-text">
+    <strong>Hlídač státu</strong> funguje díky malým dárcům. Přispějte i vy — od 100 Kč měsíčně.
+  </div>
+  <a href="index2.html#podporte" class="btn-hs btn-hs-white">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 17s-7-4.35-7-9a4 4 0 0 1 7-2.65A4 4 0 0 1 17 8c0 4.65-7 9-7 9z" fill="#28313B"/>
+    </svg>
+    Podpořte nás
+  </a>
+  <button class="bar-close" onclick="document.getElementById('orange-bar').style.display='none'" aria-label="Zavřít">✕</button>
+</div>
+
+
+<!-- NAVBAR -->
+<header class="hs-navbar">
+  <div class="nav-inner">
+    <a href="index2.html">
+      <img src="https://www.figma.com/api/mcp/asset/5d29375f-e98f-42f4-a50c-8e06da8e23aa"
+           alt="Hlídač státu" class="nav-logo">
+    </a>
+
+    <nav class="nav-links">
+      <a href="#" class="nav-link-item">Smlouvy</a>
+      <a href="#" class="nav-link-item">Dotace</a>
+      <a href="#" class="nav-link-item">Platy</a>
+      <a href="#" class="nav-link-item">Úřady</a>
+      <a href="#" class="nav-link-item">Zakázky</a>
+      <a href="#" class="nav-link-item nav-link-pv">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 2l9 5-9 5V2z" fill="#28313B"/>
+        </svg>
+        PastVina
+      </a>
+    </nav>
+
+    <div class="nav-right">
+      <div class="nav-actions">
+        <a href="index2.html#podporte" class="btn-hs btn-hs-solid">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 17s-7-4.35-7-9a4 4 0 0 1 7-2.65A4 4 0 0 1 17 8c0 4.65-7 9-7 9z" fill="white"/>
+          </svg>
+          Podpořte nás
+        </a>
+        <a href="#" class="btn-hs btn-hs-outline">Přihlásit se</a>
+      </div>
+    </div>
+
+    <button class="nav-toggle btn btn-link p-0 ms-auto text-dark" type="button"
+            aria-label="Menu" data-bs-toggle="collapse" data-bs-target="#mobileNav">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 6h18M3 12h18M3 18h18" stroke="#28313B" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="collapse" id="mobileNav">
+    <div style="padding: 8px 40px 16px; border-top: 1px solid var(--hs-light); display:flex; flex-direction:column; gap:4px;">
+      <a href="#" class="nav-link-item py-2">Smlouvy</a>
+      <a href="#" class="nav-link-item py-2">Dotace</a>
+      <a href="#" class="nav-link-item py-2">Platy</a>
+      <a href="#" class="nav-link-item py-2">Úřady</a>
+      <a href="#" class="nav-link-item py-2">Zakázky</a>
+      <a href="#" class="nav-link-item py-2 nav-link-pv">▶ PastVina</a>
+      <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap;">
+        <a href="index2.html#podporte" class="btn-hs btn-hs-solid">❤ Podpořte nás</a>
+        <a href="#" class="btn-hs btn-hs-outline">Přihlásit se</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<!-- SUB-NAV SEARCH — always open -->
+<section class="hs-subnav-search">
+  <div class="hs-wrap">
+    <div class="subnav-search-inner">
+      <span class="subnav-search-label">Hledat v databázi Hlídače státu</span>
+
+      <div class="hs-search">
+        <div class="s-input-wrap">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="9" cy="9" r="6" stroke="#6F6F6F" stroke-width="2"/>
+            <path d="M13.5 13.5L17 17" stroke="#6F6F6F" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input type="search" value="zakázka NSA 800 mil" aria-label="Hledat">
+        </div>
+        <button class="s-btn" type="button">Hledat</button>
+      </div>
+
+      <div class="hs-tags">
+        <span class="hs-tags-label">Časté:</span>
+        <a href="#" class="hs-tag">Agrofert</a>
+        <a href="#" class="hs-tag">Ministerstvo vnitra</a>
+        <a href="#" class="hs-tag">Andrej Babiš</a>
+        <a href="#" class="hs-tag">VZP</a>
+        <a href="#" class="hs-tag">ŘSD ČR</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- DETAIL (krátký obsah, jde jen o kontext pod searchboxem) -->
+<section class="hs-detail">
+  <div class="hs-wrap">
+
+    <nav class="breadcrumb-hs" aria-label="Breadcrumb">
+      <a href="index2.html">Hlídač státu</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="#">Analýzy smluv</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>NSA — dodávka IT infrastruktury</span>
+    </nav>
+
+    <p class="hs-eyebrow mb-2">Analýza smlouvy · Watchdog AI</p>
+    <h1 class="hs-h1 text-hs-black mb-3">Zakázka NSA za 800 mil. Kč<br>schválená bez&nbsp;soutěže</h1>
+    <p class="hs-body" style="color:var(--hs-grey); max-width: 720px;">
+      Systém Watchdog AI identifikoval v této smlouvě několik rizikových faktorů.
+      Zakázka byla zadána v jednacím řízení bez uveřejnění jedinému dodavateli.
+    </p>
+
+    <div class="detail-meta">
+      <span><strong>Datum uzavření:</strong> 14. 11. 2024</span>
+      <span><strong>Hodnota:</strong> 798 400 000 Kč bez DPH</span>
+      <span><strong>Zadavatel:</strong> Národní sportovní agentura</span>
+      <span><strong>Dodavatel:</strong> (neveřejný údaj)</span>
+      <span class="risk-pill">Vysoké riziko</span>
+    </div>
+
+  </div>
+</section>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
